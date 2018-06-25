@@ -11,14 +11,14 @@ addons:
       - openmpi-bin
       - libopenmpi-dev
       - g++-6
-      - clang-4.0
-      - clang-tools-4.0
+      - clang-5.0
+      - clang-tools-5.0
 
 env:
   matrix:
-    - CALI_TRAVIS_TESTNAME=clang-4
-      CALI_CC=clang-4.0
-      CALI_CXX=clang++-4.0
+    - CALI_TRAVIS_TESTNAME=clang-5
+      CALI_CC=clang-5.0
+      CALI_CXX=clang++-5.0
       WITH_MPI=Off
       WITH_GOTCHA=On
     # Build test with gcc-6
