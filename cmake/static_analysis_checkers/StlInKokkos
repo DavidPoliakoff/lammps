@@ -1,0 +1,3 @@
+set bind-root false
+let KokkosFunctions decl(hasDeclContext(namedDecl(hasName("Kokkos"))))
+match callExpr(callee(functionDecl(matchesName("Kokkos::pa"))),hasArgument(1,declRefExpr(to(varDecl(hasType(cxxRecordDecl(has(cxxMethodDecl(hasBody(hasDescendant(callExpr(callee(functionDecl(hasBody(hasDescendant(declRefExpr(to(valueDecl(hasType(namedDecl(matchesName("std::")))))).bind("ref"))),unless(KokkosFunctions)).bind("function"))))))))))))))

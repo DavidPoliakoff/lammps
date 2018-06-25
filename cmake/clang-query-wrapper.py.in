@@ -21,9 +21,7 @@ if not which("clang-query"):
 invocation = os.getenv("CLANG_QUERY","@DEFAULT_CLANG_QUERY@ ")
 checkers = os.getenv("checker","")
 checker_files = {
-    "for-checker" : "ForLoops",
-    "array-in-raja-checker" : "ArrayInRaja",
-    "reducer-free-forall" : "ReducerFreeForall"
+    "stl-in-kokkos" : "StlInKokkos"
 }
 interactive = True
 def getAfter(target, searchString):
