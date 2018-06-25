@@ -1,0 +1,58 @@
+import sys,os
+import subprocess
+#credit: https://stackoverflow.com/questions/377017/test-if-executable-exists-in-python
+def which(program):
+    import os
+    def is_exe(fpath):
+        return os.path.isfile(fpath) and os.access(fpath, os.X_OK)
+    fpath, fname = os.path.split(program)
+    if fpath:
+        if is_exe(program):
+            return program
+    else:
+        for path in os.environ["PATH"].split(os.pathsep):
+            exe_file = os.path.join(path, program)
+            if is_exe(exe_file):
+                return exe_file
+    return None
+if not which("clang-query"):
+  print("Failed to find clang-query executable, exiting")
+  exit(1)
+invocation = os.getenv("CLANG_QUERY","@DEFAULT_CLANG_QUERY@ ")
+checkers = os.getenv("checker","")
+checker_files = {
+    "for-checker" : "ForLoops",
+    "array-in-raja-checker" : "ArrayInRaja",
+    "reducer-free-forall" : "ReducerFreeForall"
+}
+interactive = True
+def getAfter(target, searchString):
+  index = target.find(searchString)
+  return target[index+len(searchString):]
+
+def map_checker(checker):
+  if checker not in checker_files:
+    return None
+  return "-f=@DEFAULT_CHECKER_DIRECTORY@/"+checker_files[checker]+" " 
+devnull = open(os.devnull, "w")
+for checker in checkers.split(' '):
+  command = map_checker(checker)
+  if command is not None:
+    invocation+=command
+    interactive = False
+for arg_in in sys.argv[1:]:
+  arg=arg_in.strip()
+  special = False
+  if [extension for extension in [".c",".cc",".cxx",".cpp"] if extension in arg]:
+    invocation+=arg+" "
+    special = True
+  if "-p=" in arg:
+    invocation+="-p "+getAfter(arg,"-p=")+" "
+    special = True
+  if not special: 
+    invocation+="-extra-arg="+arg+" "
+try:
+  print(invocation)
+  subprocess.call(invocation, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr if interactive else devnull, shell=True)
+except KeyboardInterrupt:
+  pass

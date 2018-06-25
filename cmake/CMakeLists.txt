@@ -15,6 +15,56 @@ file(GLOB LIB_SOURCES ${LAMMPS_SOURCE_DIR}/*.cpp)
 file(GLOB LMP_SOURCES ${LAMMPS_SOURCE_DIR}/main.cpp)
 list(REMOVE_ITEM LIB_SOURCES ${LMP_SOURCES})
 
+set(static_analysis_root ${CMAKE_CURRENT_LIST_DIR}/static_analysis_checkers)
+set(cmake_current_directory ${CMAKE_CURRENT_LIST_DIR})
+set(DEFAULT_CLANG_QUERY clang-query)
+set(DEFAULT_CHECKER_DIRECTORY ${static_analysis_root})
+set(CLANG_QUERY_PYTHON_WRAPPER ${CMAKE_BINARY_DIR}/share/clang-query-wrapper.py)
+configure_file(${cmake_current_directory}/clang-query-wrapper.py.in ${CLANG_QUERY_PYTHON_WRAPPER})
+macro(integrate_clang_query TARGET)
+  if(TARGET check_global)
+  else()
+    add_custom_target(check_global)
+  endif()
+  set(CMAKE_EXPORT_COMPILE_COMMANDS On)
+  STRING(REPLACE "/" "_" TARGET_NAME check_${TARGET})
+  if(TARGET ${TARGET_NAME})
+  else()
+  add_custom_target(${TARGET_NAME})
+  add_dependencies(check_global ${TARGET_NAME})
+  endif()
+  MESSAGE(STATUS "Made static analysis target ${TARGET_NAME}")
+  get_target_property(TARGET_DEFINITIONS ${TARGET} COMPILE_DEFINITIONS)
+  get_target_property(TARGET_FLAGS ${TARGET} COMPILE_FLAGS)
+  get_target_property(TARGET_SOURCES ${TARGET} SOURCES)
+  get_directory_property(DIRECTORY_DEFINITIONS DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} COMPILE_DEFINITIONS)
+  set(FULL_DEFINITIONS ${DIRECTORY_DEFINITIONS})
+  IF(TARGET_DEFINITIONS)
+    SET(FULL_DEFINITIONS ${FULL_DEFINITIONS} ${TARGET_DEFINITIONS})
+  ENDIF()
+  IF(TARGET_FLAGS)
+    SET(FULL_FLAGS ${FULL_FLAGS} ${TARGET_FLAGS})
+  ENDIF()
+  foreach(TARGET_SOURCE_IN IN LISTS TARGET_SOURCES)
+    get_source_file_property(FILE_LANGUAGE ${TARGET_SOURCE_IN} LANGUAGE)
+    if(FILE_LANGUAGE MATCHES "Fortran")
+    else()
+      get_filename_component(TARGET_FINAL_NAME ${TARGET_SOURCE_IN} NAME)
+      get_filename_component(ABSOLUTE_SOURCE_FILE ${TARGET_SOURCE_IN} ABSOLUTE)
+      STRING(REPLACE "/" "_" TARGET_SOURCE ${TARGET_SOURCE_IN})
+      add_custom_target(
+        check_${TARGET_FINAL_NAME}
+        COMMAND python ${CLANG_QUERY_PYTHON_WRAPPER} -I/usr/tce/packages/mvapich2/mvapich2-2.2-intel-18.0.1/include -p=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CXX_FLAGS} ${FULL_DEFINITIONS} ${FULL_FLAGS} ${ABSOLUTE_SOURCE_FILE}
+        VERBATIM
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Executing clang-query against ${TARGET_SOURCE}"
+      )
+      add_dependencies(${TARGET_NAME} check_${TARGET_FINAL_NAME})
+    endif()
+  endforeach()
+endmacro()
+
+
 # Cmake modules/macros are in a subdirectory to keep this file cleaner
 set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/Modules)
 
@@ -563,7 +613,7 @@ if(PKG_KOKKOS)
                           ${LAMMPS_LIB_KOKKOS_BIN_DIR})
   include_directories(${Kokkos_INCLUDE_DIRS})
   list(APPEND LAMMPS_LINK_LIBS kokkos)
-
+   
   set(KOKKOS_PKG_SOURCES_DIR ${LAMMPS_SOURCE_DIR}/KOKKOS)
   set(KOKKOS_PKG_SOURCES ${KOKKOS_PKG_SOURCES_DIR}/kokkos.cpp
                          ${KOKKOS_PKG_SOURCES_DIR}/atom_kokkos.cpp
@@ -586,7 +636,7 @@ if(PKG_KOKKOS)
   # register kokkos-only styles
   RegisterNBinStyle(${KOKKOS_PKG_SOURCES_DIR}/nbin_kokkos.h)
   RegisterNPairStyle(${KOKKOS_PKG_SOURCES_DIR}/npair_kokkos.h)
-
+  integrate_clang_query(kokkos)
   if(PKG_USER-DPD)
     get_property(KOKKOS_PKG_SOURCES GLOBAL PROPERTY KOKKOS_PKG_SOURCES)
     list(APPEND KOKKOS_PKG_SOURCES ${KOKKOS_PKG_SOURCES_DIR}/npair_ssa_kokkos.cpp)
@@ -801,6 +851,7 @@ include_directories(${LAMMPS_STYLE_HEADERS_DIR})
 # Actually add executable and lib to build
 ############################################
 add_library(lammps ${LIB_SOURCES})
+integrate_clang_query(lammps)
 get_property(LANGUAGES GLOBAL PROPERTY ENABLED_LANGUAGES)
 list (FIND LANGUAGES "Fortran" _index)
 if (${_index} GREATER -1)
