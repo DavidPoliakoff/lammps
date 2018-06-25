@@ -23,6 +23,20 @@ checkers = os.getenv("checker","")
 checker_files = {
     "stl-in-kokkos" : "StlInKokkos"
 }
+
+def transformFileNames(fn):
+  build_string=""
+  for index,ch in enumerate(fn):
+    if ch.isupper():
+      if index is not 0:
+        build_string += "-"
+    build_string+=ch.lower()
+  return build_string
+
+for fn in os.listdir("@DEFAULT_CHECKER_DIRECTORY@"):
+  if not fn[:-1].endswith(".sw"):
+    checker_files[transformFileNames(fn)] = fn
+
 interactive = True
 def getAfter(target, searchString):
   index = target.find(searchString)
