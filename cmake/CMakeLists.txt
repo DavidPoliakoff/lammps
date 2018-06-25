@@ -57,7 +57,7 @@ macro(integrate_clang_query TARGET)
         COMMAND python ${CLANG_QUERY_PYTHON_WRAPPER} -I/usr/tce/packages/mvapich2/mvapich2-2.2-intel-18.0.1/include -p=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CXX_FLAGS} ${FULL_DEFINITIONS} ${FULL_FLAGS} ${ABSOLUTE_SOURCE_FILE}
         VERBATIM
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Executing clang-query against ${TARGET_SOURCE}"
+        COMMENT "Executing clang-query against ${TARGET_FINAL_NAME}"
       )
       add_dependencies(${TARGET_NAME} check_${TARGET_FINAL_NAME})
     endif()
@@ -211,9 +211,11 @@ endif()
 find_package(OpenMP QUIET)
 option(BUILD_OMP "Build with OpenMP support" ${OpenMP_FOUND})
 if(BUILD_OMP OR PKG_USER-OMP OR PKG_KOKKOS OR PKG_USER-INTEL)
+  if(NOT LAMMPS_INTERNAL_CI_DISABLE_OPENMP)
   find_package(OpenMP REQUIRED)
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 endif()
 
 if(PKG_KSPACE)
