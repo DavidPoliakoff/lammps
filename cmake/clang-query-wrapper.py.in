@@ -50,7 +50,6 @@ for arg_in in sys.argv[1:]:
   if not special: 
     invocation+="-extra-arg="+arg+" "
 try:
-  print(invocation)
   output_env = os.getenv("FAIL_ON_FIND","")
   fail_on_find = (len(output_env) > 0)
   output = subprocess.PIPE if fail_on_find else sys.stdout
@@ -58,7 +57,8 @@ try:
   proc.wait()
   if fail_on_find:
     output_text = proc.stdout.read()
-    print(output_text)
+    if not output_text.startswith("0 matches."):
+      print(output_text)
     if "binds here" in output_text:
       sys.exit(1)
 except KeyboardInterrupt:
