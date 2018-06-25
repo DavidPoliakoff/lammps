@@ -57,7 +57,7 @@ macro(integrate_clang_query TARGET)
         COMMAND python ${CLANG_QUERY_PYTHON_WRAPPER} -I/usr/tce/packages/mvapich2/mvapich2-2.2-intel-18.0.1/include -p=${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CXX_FLAGS} ${FULL_DEFINITIONS} ${FULL_FLAGS} ${ABSOLUTE_SOURCE_FILE}
         VERBATIM
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Executing clang-query against ${TARGET_SOURCE}"
+        COMMENT "Executing clang-query against ${TARGET_FINAL_NAME}"
       )
       add_dependencies(${TARGET_NAME} check_${TARGET_FINAL_NAME})
     endif()
