@@ -51,6 +51,16 @@ for arg_in in sys.argv[1:]:
     invocation+="-extra-arg="+arg+" "
 try:
   print(invocation)
-  subprocess.call(invocation, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr if interactive else devnull, shell=True)
+  output_env = os.getenv("FAIL_ON_FIND","")
+  fail_on_find = (len(output_env) > 0)
+  output = subprocess.PIPE if fail_on_find else sys.stdout
+  proc = subprocess.Popen(invocation, stdin=sys.stdin, stdout=output, stderr=sys.stderr if interactive else devnull, shell=True)
+  proc.wait()
+  if fail_on_find:
+    output_text = proc.stdout.read()
+    print(output_text)
+    if "binds here" in output_text:
+      sys.exit(1)
 except KeyboardInterrupt:
   pass
+sys.exit(0)

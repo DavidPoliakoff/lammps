@@ -20,6 +20,7 @@ env:
       CALI_CC=clang-5.0
       CALI_CXX=clang++-5.0
       WITH_MPI=Off
+      FAIL_ON_FIND=On
       WITH_GOTCHA=On
     # Build test with gcc-6
 
