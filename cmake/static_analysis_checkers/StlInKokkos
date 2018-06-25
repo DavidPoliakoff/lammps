@@ -1,3 +1,5 @@
 set bind-root false
 let KokkosFunctions decl(hasDeclContext(namedDecl(hasName("Kokkos"))))
-match callExpr(callee(functionDecl(matchesName("Kokkos::pa"))),hasArgument(1,declRefExpr(to(varDecl(hasType(cxxRecordDecl(has(cxxMethodDecl(hasBody(hasDescendant(callExpr(callee(functionDecl(hasBody(hasDescendant(declRefExpr(to(valueDecl(hasType(namedDecl(matchesName("std::")))))).bind("ref"))),unless(KokkosFunctions)).bind("function"))))))))))))))
+let StlReferences declRefExpr(to(valueDecl(hasType(namedDecl(matchesName("std::")))))).bind("ref")
+let DangerousFunctors cxxRecordDecl(has(cxxMethodDecl(hasBody(hasDescendant(callExpr(callee(functionDecl(hasBody(hasDescendant(StlReferences)),unless(KokkosFunctions)).bind("function"))))))))
+match callExpr(callee(functionDecl(matchesName("Kokkos::pa"))),hasArgument(1,declRefExpr(to(varDecl(hasType(DangerousFunctors))))))
