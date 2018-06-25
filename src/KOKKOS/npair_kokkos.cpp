@@ -19,7 +19,7 @@
 #include "nbin_kokkos.h"
 #include "nstencil.h"
 #include "force.h"
-
+#include <vector>
 namespace LAMMPS_NS {
 
 /* ---------------------------------------------------------------------- */
@@ -315,7 +315,8 @@ void NeighborKokkosExecute<DeviceType>::
   if (molecular == 2) moltemplate = 1;
   else moltemplate = 0;
   // get subview of neighbors of i
-
+  std::vector<int> dogs;
+  dogs[0];
   const AtomNeighbors neighbors_i = neigh_list.get_neighbors(i);
   const X_FLOAT xtmp = x(i, 0);
   const X_FLOAT ytmp = x(i, 1);
@@ -527,7 +528,6 @@ void NeighborKokkosExecute<DeviceType>::build_ItemCuda(typename Kokkos::TeamPoli
       const X_FLOAT dely = ytmp - other_x[m + atoms_per_bin];
       const X_FLOAT delz = ztmp - other_x[m + 2 * atoms_per_bin];
       const X_FLOAT rsq = delx * delx + dely * dely + delz * delz;
-
       if(rsq <= cutneighsq(itype,jtype)) {
         if (molecular) {
           int which = 0;
