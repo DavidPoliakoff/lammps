@@ -29,4 +29,4 @@ script:
   - CMAKE_OPTS="${CMAKE_OPTS} -DCMAKE_C_COMPILER=${CALI_CC} -DCMAKE_CXX_COMPILER=${CALI_CXX}"
   - if [[ -n "${COVERAGE}" ]] ; then CMAKE_OPTS="${CMAKE_OPTS} -DCMAKE_C_FLAGS=-coverage -DCMAKE_CXX_FLAGS=-coverage"; fi
   - cmake -GNinja -DLAMMPS_INTERNAL_CI_DISABLE_OPENMP=On -DBUILD_OMP=Off -DPKG_KOKKOS=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ${CMAKE_OPTS} ../cmake
-  - checker=stl-in-kokkos ninja -j4 check_global
+  - checker=stl-in-kokkos ninja -j12 check_global
